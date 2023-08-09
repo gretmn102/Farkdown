@@ -1,4 +1,4 @@
-module Farkdown.Markdown
+namespace Farkdown.Markdown
 open FsharpMyExtension
 open FsharpMyExtension.Either
 
@@ -18,6 +18,56 @@ type Inline =
     | Img of alt:string * src:string * title:string
     /// Сюда входят стили, которые не удалось поместить во всё остальное.
     | Span of style:string * body:Inline list
+
+[<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
+[<RequireQualifiedAccess>]
+module Inline =
+    module Show =
+        open FsharpMyExtension.ShowList
+
+        let rec show = function
+            | Inline.WithFontStyle(typ, xs) ->
+                let quot =
+                    match typ with
+                    | FontStyle.Underline -> "__"
+                    | FontStyle.Italic -> "*"
+                    | FontStyle.Bold -> "**"
+                    | FontStyle.Strikeout -> "~~"
+                let xs = List.collect show xs
+                showString quot << joinEmpty "" xs << showString quot
+                |> List.singleton
+
+            | Inline.Text x ->
+                showString x |> List.singleton
+
+            | Inline.Url(description, href, alt) ->
+                let x =
+                    if alt = "" then
+                        empty
+                    else
+                        showChar ' ' << showString alt
+                let xs = List.collect show description
+                showChar '[' << joinEmpty "" xs << showChar ']'
+                << showAutoParen "(" (showString href << x)
+                |> List.singleton
+
+            | Inline.Img(alt, src, title) ->
+                let x =
+                    if alt = "" then
+                        empty
+                    else
+                        showChar ' ' << showString title
+                showChar '!'
+                << showChar '[' << showString alt << showChar ']'
+                << showAutoParen "(" (showString src << x)
+                |> List.singleton
+
+            | Inline.Span(style, body) ->
+                showString "<span style='" << showString style << showString "'>"
+                << joinEmpty "" (List.collect show body)
+                << showString "</span>"
+                |> List.singleton
+
 /// По-идеи, сами не имеют знаков переносов.
 /// Между ними — `<br>`, он же "мягкий" перенос.
 type Inlines = Inline list
@@ -264,47 +314,10 @@ module HtmlToMarkdown =
 
 module Show =
     open FsharpMyExtension.ShowList
-    let rec showInline = function
-        | Inline.WithFontStyle(typ, xs) ->
-            let quot =
-                match typ with
-                | FontStyle.Underline -> "__"
-                | FontStyle.Italic -> "*"
-                | FontStyle.Bold -> "**"
-                | FontStyle.Strikeout -> "~~"
-            let xs = List.collect showInline xs
-            showString quot << joinEmpty "" xs << showString quot
-            |> List.singleton
-        | Inline.Text x -> showString x |> List.singleton
-        | Inline.Url(description, href, alt) ->
-            let x =
-                if alt = "" then
-                    empty
-                else
-                    showChar ' ' << showString alt
-            let xs = List.collect showInline description
-            showChar '[' << joinEmpty "" xs << showChar ']'
-            << showAutoParen "(" (showString href << x)
-            |> List.singleton
-        | Inline.Img(alt, src, title) ->
-            let x =
-                if alt = "" then
-                    empty
-                else
-                    showChar ' ' << showString title
-            showChar '!'
-            << showChar '[' << showString alt << showChar ']'
-            << showAutoParen "(" (showString src << x)
-            |> List.singleton
-        | Inline.Span(style, body) ->
-            showString "<span style='" << showString style << showString "'>"
-            << joinEmpty "" (List.collect showInline body)
-            << showString "</span>"
-            |> List.singleton
 
     let showInlines xs =
         xs
-        |> List.map (showInline >> joinEmpty "")
+        |> List.map (Inline.Show.show >> joinEmpty "")
         |> joinEmpty "" : ShowS
     let rec show = function
         | FlowContent.JustInlines xss ->
@@ -359,7 +372,7 @@ module Show =
         | FlowContent.Header(n, inlines) ->
             let inlines =
                 inlines
-                |> List.map (showInline >> joinEmpty "")
+                |> List.map (Inline.Show.show >> joinEmpty "")
                 |> joinEmpty ""
             replicate n '#' << showChar ' ' << inlines
             |> List.singleton
