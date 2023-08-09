@@ -64,7 +64,7 @@ let listTest =
                 ] |> String.concat "\n"
             let act =
                 parse input
-                |> List.map formatLine
+                |> List.map FlowContent.format
 
             Assert.Equal("", parsed, act)
         testCase "parse test" <| fun () ->

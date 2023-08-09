@@ -91,21 +91,24 @@ type FlowContent =
     | HtmlList of ordered:bool * list<FlowContent list>
     | Header of int * Inlines
 
-let formatLine =
-    let rec f = function
-        | FlowContent.JustInlines xss ->
-            List.map Inlines.format xss
-            |> FlowContent.JustInlines
-        | FlowContent.Paragraph xss ->
-            List.map Inlines.format xss
-            |> FlowContent.Paragraph
-        | FlowContent.Custom(name, attributes, body) ->
-            FlowContent.Custom(name, attributes, List.map f body)
-        | FlowContent.HtmlList(ordered, x) ->
-            FlowContent.HtmlList(ordered, List.map (List.map f) x)
-        | FlowContent.Header(h, xss) ->
-            FlowContent.Header(h, Inlines.format xss)
-    f
+[<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
+[<RequireQualifiedAccess>]
+module FlowContent =
+    let format =
+        let rec f = function
+            | FlowContent.JustInlines xss ->
+                List.map Inlines.format xss
+                |> FlowContent.JustInlines
+            | FlowContent.Paragraph xss ->
+                List.map Inlines.format xss
+                |> FlowContent.Paragraph
+            | FlowContent.Custom(name, attributes, body) ->
+                FlowContent.Custom(name, attributes, List.map f body)
+            | FlowContent.HtmlList(ordered, x) ->
+                FlowContent.HtmlList(ordered, List.map (List.map f) x)
+            | FlowContent.Header(h, xss) ->
+                FlowContent.Header(h, Inlines.format xss)
+        f
 
 module HtmlToMarkdown =
     open FsharpMyExtension
