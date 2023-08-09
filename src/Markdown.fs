@@ -84,6 +84,7 @@ module Inlines =
         |> first
         |> last
 
+[<RequireQualifiedAccess>]
 type FlowContent =
     | Custom of name:string * attributes:(string * string) list * body:FlowContent list
     | Paragraph of Inlines list
@@ -204,7 +205,7 @@ module HtmlToMarkdown =
             >>= fun node ->
                 let n = int (string node.Name.[1])
                 sub pinlines (node, ())
-                |>> fun xs -> Header(n, xs)
+                |>> fun xs -> FlowContent.Header(n, xs)
 
         let pbr = takeN "br"
         let pinliness1 =
@@ -217,7 +218,7 @@ module HtmlToMarkdown =
             >>. many (pinlines .>> many pbr)
         let pparagraph =
             takeN "aside" <|> takeN "p"
-            >>= fun node -> sub (pinliness .>> eof "pinliness") (node, ()) |>> Paragraph
+            >>= fun node -> sub (pinliness .>> eof "pinliness") (node, ()) |>> FlowContent.Paragraph
 
         let plist =
             let plistItem =
@@ -233,7 +234,7 @@ module HtmlToMarkdown =
                     | _ -> false
                 let p' =
                     many plistItem
-                    |>> fun ys -> HtmlList(isOrdered, ys)
+                    |>> fun ys -> FlowContent.HtmlList(isOrdered, ys)
                 sub (p' .>> eof "eof") (node, ())
 
         let custom =
@@ -247,11 +248,11 @@ module HtmlToMarkdown =
                         node.Attributes
                         |> Seq.map (fun x -> x.Name, x.Value )
                         |> List.ofSeq
-                    Custom(node.Name, atts, List.concat xs)
+                    FlowContent.Custom(node.Name, atts, List.concat xs)
 
         p2ref :=
             choice [
-                pinliness1 |>> (JustInlines >> List.singleton)
+                pinliness1 |>> (FlowContent.JustInlines >> List.singleton)
                 plist |>> List.singleton
                 pparagraph |>> List.singleton
                 pheader |>> List.singleton
