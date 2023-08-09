@@ -68,8 +68,9 @@ let listTest =
                 |> List.map FlowContent.format
 
             Assert.Equal("", parsed, act)
+
         testCase "parse test" <| fun () ->
-            let act = Show.print parsed
+            let act = Document.serialize parsed
 
             Assert.Equal("", markdown, act)
     ]

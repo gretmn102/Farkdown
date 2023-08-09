@@ -399,8 +399,16 @@ module HtmlToMarkdown =
 
 type Document = list<FlowContent>
 
-module Show =
-    let print =
-        List.collect FlowContent.Show.show
-        >> FsharpMyExtension.ShowList.joinsEmpty FsharpMyExtension.ShowList.nl
+[<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
+[<RequireQualifiedAccess>]
+module Document =
+    module Show =
+        open FsharpMyExtension.ShowList
+
+        let show =
+            List.collect FlowContent.Show.show
+            >> joinsEmpty nl
+
+    let serialize =
+        Show.show
         >> FsharpMyExtension.ShowList.show
