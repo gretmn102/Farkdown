@@ -1,0 +1,15 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "RunTests",
+      "type": "shell",
+      "command": "build",
+      "args": [
+        "-t",
+        "RunTests"
+      ],
+      "problemMatcher": []
+    }
+  ]
+}
