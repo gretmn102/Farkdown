@@ -20,15 +20,16 @@ let listTest =
     let parsed =
         [FlowContent.HtmlList
            (false,
-            [[FlowContent.Paragraph [[Text "First"]];
+            [[FlowContent.Paragraph [[Inline.Text "First"]];
               FlowContent.HtmlList
                 (false,
-                 [[FlowContent.JustInlines [[Text "First.Item First"]]];
+                 [[FlowContent.JustInlines [[Inline.Text "First.Item First"]]];
                   [FlowContent.JustInlines
-                     [[Text "First.Item "; WithFontStyle (FontStyle.Italic, [Text "Second"])];
-                      []; [Text "Second Text"]]]]); FlowContent.Paragraph [[Text "First Text"]];
-              FlowContent.HtmlList (false, [[FlowContent.JustInlines [[Text "First.Item Third"]]]])];
-             [FlowContent.Paragraph [[Text "Second"]; [Text "Second Text"]]]])]
+                     [[Inline.Text "First.Item "; Inline.WithFontStyle (FontStyle.Italic, [Inline.Text "Second"])];
+                      []; [Inline.Text "Second Text"]]]]); FlowContent.Paragraph [[Inline.Text "First Text"]];
+              FlowContent.HtmlList (false, [[FlowContent.JustInlines [[Inline.Text "First.Item Third"]]]])];
+             [FlowContent.Paragraph [[Inline.Text "Second"]; [Inline.Text "Second Text"]]]])]
+
     let markdown =
         [
             "* First"

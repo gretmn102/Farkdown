@@ -9,6 +9,7 @@ type FontStyle =
     | Strikeout
     | Underline
 
+[<RequireQualifiedAccess>]
 type Inline =
     | WithFontStyle of FontStyle * Inline list
     | Text of string
@@ -80,29 +81,29 @@ module Inlines =
                 str.Replace('\n', ' ')
             xs
             |> List.map (function
-                | Text x ->
-                    Text(replace x)
-                | WithFontStyle(fontStyle, body) ->
-                    WithFontStyle(fontStyle, f body)
-                | Url(description, href, alt) ->
-                    Url(f description, href, alt)
-                | Img(alt, src, title) as x -> x
-                | Span(style, body) ->
-                    Span(style, f body)
+                | Inline.Text x ->
+                    Inline.Text(replace x)
+                | Inline.WithFontStyle(fontStyle, body) ->
+                    Inline.WithFontStyle(fontStyle, f body)
+                | Inline.Url(description, href, alt) ->
+                    Inline.Url(f description, href, alt)
+                | Inline.Img(alt, src, title) as x -> x
+                | Inline.Span(style, body) ->
+                    Inline.Span(style, f body)
             )
         let first =
             let rec f = function
                 | x::xs ->
                     match x with
-                    | Text x ->
-                        Text(x.TrimStart())
-                    | WithFontStyle(fontStyle, body) ->
-                        WithFontStyle(fontStyle, f body)
-                    | Url(description, href, alt) ->
-                        Url(f description, href, alt)
-                    | Img(alt, src, title) as x -> x
-                    | Span(style, body) ->
-                        Span(style, f body)
+                    | Inline.Text x ->
+                        Inline.Text(x.TrimStart())
+                    | Inline.WithFontStyle(fontStyle, body) ->
+                        Inline.WithFontStyle(fontStyle, f body)
+                    | Inline.Url(description, href, alt) ->
+                        Inline.Url(f description, href, alt)
+                    | Inline.Img(alt, src, title) as x -> x
+                    | Inline.Span(style, body) ->
+                        Inline.Span(style, f body)
                     |> fun x -> x::xs
                 | [] -> [] // TODO: надо взять соседний узел
             f
@@ -117,15 +118,15 @@ module Inlines =
                 xs
                 |> mapLast (fun x ->
                     match x with
-                    | Text x ->
-                        Text(x.TrimEnd())
-                    | WithFontStyle(fontStyle, body) ->
-                        WithFontStyle(fontStyle, f body)
-                    | Url(description, href, alt) ->
-                        Url(f description, href, alt)
-                    | Img(alt, src, title) as x -> x
-                    | Span(style, body) ->
-                        Span(style, f body)
+                    | Inline.Text x ->
+                        Inline.Text(x.TrimEnd())
+                    | Inline.WithFontStyle(fontStyle, body) ->
+                        Inline.WithFontStyle(fontStyle, f body)
+                    | Inline.Url(description, href, alt) ->
+                        Inline.Url(f description, href, alt)
+                    | Inline.Img(alt, src, title) as x -> x
+                    | Inline.Span(style, body) ->
+                        Inline.Span(style, f body)
                 )
             f
 
@@ -194,21 +195,21 @@ module HtmlToMarkdown =
                     let f x =
                         HtmlNode.tryGetAttVal x node
                         |> Option.defaultValue ""
-                    Url(body, f "href", f "title")
+                    Inline.Url(body, f "href", f "title")
         let pimg =
             takeN "img"
             |>> fun node ->
                 let f x =
                     HtmlNode.tryGetAttVal x node
                     |> Option.defaultValue ""
-                Img(f "alt", f "src", f "title")
+                Inline.Img(f "alt", f "src", f "title")
         let ptext =
             satisfym (fun (node:HtmlAgilityPack.HtmlNode) ->
                 if node.NodeType = HtmlAgilityPack.HtmlNodeType.Text then
                     node.InnerText |> Some
                 else None)
                 "text"
-            |>> Text
+            |>> Inline.Text
         let pcomment =
             satisfym (fun (node:HtmlAgilityPack.HtmlNode) ->
                 if node.NodeType = HtmlAgilityPack.HtmlNodeType.Comment then
