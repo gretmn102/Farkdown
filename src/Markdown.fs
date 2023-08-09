@@ -21,58 +21,17 @@ type Inline =
 /// По-идеи, сами не имеют знаков переносов.
 /// Между ними — `<br>`, он же "мягкий" перенос.
 type Inlines = Inline list
-type FlowContent =
-    | Custom of name:string * attributes:(string * string) list * body:FlowContent list
-    | Paragraph of Inlines list
-    | JustInlines of Inlines list
-    | HtmlList of ordered:bool * list<FlowContent list>
-    | Header of int * Inlines
-
-let formatInlines (xs:Inlines) =
-    let rec f (xs:Inlines) =
-        let replace (str:string) =
-            str.Replace('\n', ' ')
-        xs
-        |> List.map (function
-            | Text x ->
-                Text(replace x)
-            | WithFontStyle(fontStyle, body) ->
-                WithFontStyle(fontStyle, f body)
-            | Url(description, href, alt) ->
-                Url(f description, href, alt)
-            | Img(alt, src, title) as x -> x
-            | Span(style, body) ->
-                Span(style, f body)
-        )
-    let first =
-        let rec f = function
-            | x::xs ->
-                match x with
-                | Text x ->
-                    Text(x.TrimStart())
-                | WithFontStyle(fontStyle, body) ->
-                    WithFontStyle(fontStyle, f body)
-                | Url(description, href, alt) ->
-                    Url(f description, href, alt)
-                | Img(alt, src, title) as x -> x
-                | Span(style, body) ->
-                    Span(style, f body)
-                |> fun x -> x::xs
-            | [] -> [] // TODO: надо взять соседний узел
-        f
-    let last =
-        let mapLast fn =
-            let rec f acc = function
-                | [x] -> fn x::acc |> List.rev
-                | x::xs -> f (x::acc) xs
-                | [] -> List.rev acc // TODO: надо взять предыдущий узел
-            f []
-        let rec f xs =
+[<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
+[<RequireQualifiedAccess>]
+module Inlines =
+    let format (xs:Inlines) =
+        let rec f (xs:Inlines) =
+            let replace (str:string) =
+                str.Replace('\n', ' ')
             xs
-            |> mapLast (fun x ->
-                match x with
+            |> List.map (function
                 | Text x ->
-                    Text(x.TrimEnd())
+                    Text(replace x)
                 | WithFontStyle(fontStyle, body) ->
                     WithFontStyle(fontStyle, f body)
                 | Url(description, href, alt) ->
@@ -81,27 +40,71 @@ let formatInlines (xs:Inlines) =
                 | Span(style, body) ->
                     Span(style, f body)
             )
-        f
+        let first =
+            let rec f = function
+                | x::xs ->
+                    match x with
+                    | Text x ->
+                        Text(x.TrimStart())
+                    | WithFontStyle(fontStyle, body) ->
+                        WithFontStyle(fontStyle, f body)
+                    | Url(description, href, alt) ->
+                        Url(f description, href, alt)
+                    | Img(alt, src, title) as x -> x
+                    | Span(style, body) ->
+                        Span(style, f body)
+                    |> fun x -> x::xs
+                | [] -> [] // TODO: надо взять соседний узел
+            f
+        let last =
+            let mapLast fn =
+                let rec f acc = function
+                    | [x] -> fn x::acc |> List.rev
+                    | x::xs -> f (x::acc) xs
+                    | [] -> List.rev acc // TODO: надо взять предыдущий узел
+                f []
+            let rec f xs =
+                xs
+                |> mapLast (fun x ->
+                    match x with
+                    | Text x ->
+                        Text(x.TrimEnd())
+                    | WithFontStyle(fontStyle, body) ->
+                        WithFontStyle(fontStyle, f body)
+                    | Url(description, href, alt) ->
+                        Url(f description, href, alt)
+                    | Img(alt, src, title) as x -> x
+                    | Span(style, body) ->
+                        Span(style, f body)
+                )
+            f
 
-    xs
-    |> f
-    |> first
-    |> last
+        xs
+        |> f
+        |> first
+        |> last
+
+type FlowContent =
+    | Custom of name:string * attributes:(string * string) list * body:FlowContent list
+    | Paragraph of Inlines list
+    | JustInlines of Inlines list
+    | HtmlList of ordered:bool * list<FlowContent list>
+    | Header of int * Inlines
 
 let formatLine =
     let rec f = function
         | FlowContent.JustInlines xss ->
-            List.map formatInlines xss
+            List.map Inlines.format xss
             |> FlowContent.JustInlines
         | FlowContent.Paragraph xss ->
-            List.map formatInlines xss
+            List.map Inlines.format xss
             |> FlowContent.Paragraph
         | FlowContent.Custom(name, attributes, body) ->
             FlowContent.Custom(name, attributes, List.map f body)
         | FlowContent.HtmlList(ordered, x) ->
             FlowContent.HtmlList(ordered, List.map (List.map f) x)
         | FlowContent.Header(h, xss) ->
-            FlowContent.Header(h, formatInlines xss)
+            FlowContent.Header(h, Inlines.format xss)
     f
 
 module HtmlToMarkdown =
@@ -185,7 +188,7 @@ module HtmlToMarkdown =
 
         p
         |>> List.concat
-        |>> formatInlines // TODO: Вот это всё безобразие нужно на стадии парсинга сделать
+        |>> Inlines.format // TODO: Вот это всё безобразие нужно на стадии парсинга сделать
 
     let p2 : Parser<_> =
         let takeN name = takeN name .>> ws
