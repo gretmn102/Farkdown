@@ -75,6 +75,14 @@ type Inlines = Inline list
 [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
 [<RequireQualifiedAccess>]
 module Inlines =
+    module Show =
+        open FsharpMyExtension.ShowList
+
+        let showInlines xs =
+            xs
+            |> List.map (Inline.Show.show >> joinEmpty "")
+            |> joinEmpty "" : ShowS
+
     let format (xs:Inlines) =
         let rec f (xs:Inlines) =
             let replace (str:string) =
@@ -316,16 +324,12 @@ module HtmlToMarkdown =
 module Show =
     open FsharpMyExtension.ShowList
 
-    let showInlines xs =
-        xs
-        |> List.map (Inline.Show.show >> joinEmpty "")
-        |> joinEmpty "" : ShowS
     let rec show = function
         | FlowContent.JustInlines xss ->
-            List.map showInlines xss
+            List.map Inlines.Show.showInlines xss
             : ShowS list
         | FlowContent.Paragraph xss ->
-            List.map showInlines xss @ [empty]
+            List.map Inlines.Show.showInlines xss @ [empty]
             : ShowS list
         | FlowContent.HtmlList(ordered, items) ->
             let tab = showString "  "
