@@ -154,6 +154,82 @@ type FlowContent =
 [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
 [<RequireQualifiedAccess>]
 module FlowContent =
+    module Show =
+        open FsharpMyExtension.ShowList
+
+        let rec show = function
+            | FlowContent.JustInlines xss ->
+                List.map Inlines.Show.showInlines xss
+                : ShowS list
+            | FlowContent.Paragraph xss ->
+                List.map Inlines.Show.showInlines xss @ [empty]
+                : ShowS list
+            | FlowContent.HtmlList(ordered, items) ->
+                let tab = showString "  "
+                let xs =
+                    let f x =
+                        match x with
+                        | FlowContent.HtmlList(_) ->
+                            show x
+                            |> List.map (fun x -> tab << x)
+                        | _ ->
+                            show x
+                            |> List.map (fun x -> showChar ' ' << x)
+                    if ordered then
+                        items
+                        |> List.mapi (fun i xs ->
+                            match xs with
+                            | x::xs ->
+                                match f x with
+                                | x::ys ->
+                                    let first = shows (i + 1) << x
+                                    let rest = List.collect f xs
+                                    first::(ys@rest)
+                                | xs ->
+
+                                    failwithf "error in ordered:\n%A" xs
+                            | [] -> []
+                        )
+                    else
+                        items
+                        |> List.map (fun xs ->
+                            match xs with
+                            | x::xs ->
+                                match f x with
+                                | x::ys ->
+                                    let first = showChar '*' << x
+                                    let rest = List.collect f xs
+                                    first::(ys@rest)
+                                | xs ->
+
+                                    failwithf "error in non-ordered:\n%A" xs
+                            | [] -> []
+                        )
+                xs |> List.concat
+
+            | FlowContent.Header(n, inlines) ->
+                let inlines =
+                    inlines
+                    |> List.map (Inline.Show.show >> joinEmpty "")
+                    |> joinEmpty ""
+                replicate n '#' << showChar ' ' << inlines
+                |> List.singleton
+            | FlowContent.Custom(name, attributes, body) ->
+                let atts =
+                    if List.isEmpty attributes then empty
+                    else
+                        let atts =
+                            attributes
+                            |> List.map (fun (name, value) ->
+                                showString name << showChar '='
+                                << showAutoParen "'" (showString value) )
+                            |> join " "
+                        showChar ' ' << atts
+                showChar '<' << showString name << atts << showChar '>'
+                << joinEmpty "" (List.collect show body)
+                << showChar '<' << showChar '/' << showString name << showChar '>'
+                |> List.singleton
+
     let format =
         let rec f = function
             | FlowContent.JustInlines xss ->
@@ -322,81 +398,7 @@ module HtmlToMarkdown =
         run (ws >>. many p2 |>> List.concat .>> eof "p2 or eof") xs
 
 module Show =
-    open FsharpMyExtension.ShowList
-
-    let rec show = function
-        | FlowContent.JustInlines xss ->
-            List.map Inlines.Show.showInlines xss
-            : ShowS list
-        | FlowContent.Paragraph xss ->
-            List.map Inlines.Show.showInlines xss @ [empty]
-            : ShowS list
-        | FlowContent.HtmlList(ordered, items) ->
-            let tab = showString "  "
-            let xs =
-                let f x =
-                    match x with
-                    | FlowContent.HtmlList(_) ->
-                        show x
-                        |> List.map (fun x -> tab << x)
-                    | _ ->
-                        show x
-                        |> List.map (fun x -> showChar ' ' << x)
-                if ordered then
-                    items
-                    |> List.mapi (fun i xs ->
-                        match xs with
-                        | x::xs ->
-                            match f x with
-                            | x::ys ->
-                                let first = shows (i + 1) << x
-                                let rest = List.collect f xs
-                                first::(ys@rest)
-                            | xs ->
-
-                                failwithf "error in ordered:\n%A" xs
-                        | [] -> []
-                    )
-                else
-                    items
-                    |> List.map (fun xs ->
-                        match xs with
-                        | x::xs ->
-                            match f x with
-                            | x::ys ->
-                                let first = showChar '*' << x
-                                let rest = List.collect f xs
-                                first::(ys@rest)
-                            | xs ->
-
-                                failwithf "error in non-ordered:\n%A" xs
-                        | [] -> []
-                    )
-            xs |> List.concat
-
-        | FlowContent.Header(n, inlines) ->
-            let inlines =
-                inlines
-                |> List.map (Inline.Show.show >> joinEmpty "")
-                |> joinEmpty ""
-            replicate n '#' << showChar ' ' << inlines
-            |> List.singleton
-        | FlowContent.Custom(name, attributes, body) ->
-            let atts =
-                if List.isEmpty attributes then empty
-                else
-                    let atts =
-                        attributes
-                        |> List.map (fun (name, value) ->
-                            showString name << showChar '='
-                            << showAutoParen "'" (showString value) )
-                        |> join " "
-                    showChar ' ' << atts
-            showChar '<' << showString name << atts << showChar '>'
-            << joinEmpty "" (List.collect show body)
-            << showChar '<' << showChar '/' << showString name << showChar '>'
-            |> List.singleton
     let print =
-        List.collect show
+        List.collect FlowContent.Show.show
         >> FsharpMyExtension.ShowList.joinsEmpty FsharpMyExtension.ShowList.nl
         >> FsharpMyExtension.ShowList.show
