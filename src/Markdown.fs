@@ -397,6 +397,8 @@ module HtmlToMarkdown =
     let start2 xs =
         run (ws >>. many p2 |>> List.concat .>> eof "p2 or eof") xs
 
+type Document = list<FlowContent>
+
 module Show =
     let print =
         List.collect FlowContent.Show.show
