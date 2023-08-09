@@ -2,11 +2,13 @@ module Farkdown.Markdown
 open FsharpMyExtension
 open FsharpMyExtension.Either
 
+[<RequireQualifiedAccess>]
 type FontStyle =
     | Italic
     | Bold
     | Strikeout
     | Underline
+
 type Inline =
     | WithFontStyle of FontStyle * Inline list
     | Text of string
@@ -117,17 +119,17 @@ module HtmlToMarkdown =
             takeN "strong" <|> takeN "b"
             >>@
                 p' |>> fun body ->
-                    Inline.WithFontStyle(Bold, body)
+                    Inline.WithFontStyle(FontStyle.Bold, body)
         let pem =
             takeN "em" <|> takeN "i"
             >>= fun body ->
                 sub p' (body, ()) |>> fun body ->
-                    Inline.WithFontStyle(Italic, body)
+                    Inline.WithFontStyle(FontStyle.Italic, body)
         let punderline =
             takeN "u"
             >>= fun body ->
                 sub p' (body, ()) |>> fun body ->
-                    Inline.WithFontStyle(Underline, body)
+                    Inline.WithFontStyle(FontStyle.Underline, body)
         let pa =
             takeN "a"
             >>= fun node ->
@@ -259,10 +261,10 @@ module Show =
         | Inline.WithFontStyle(typ, xs) ->
             let quot =
                 match typ with
-                | Underline -> "__"
-                | Italic -> "*"
-                | Bold -> "**"
-                | Strikeout -> "~~"
+                | FontStyle.Underline -> "__"
+                | FontStyle.Italic -> "*"
+                | FontStyle.Bold -> "**"
+                | FontStyle.Strikeout -> "~~"
             let xs = List.collect showInline xs
             showString quot << joinEmpty "" xs << showString quot
             |> List.singleton

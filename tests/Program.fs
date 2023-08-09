@@ -25,7 +25,7 @@ let listTest =
                 (false,
                  [[JustInlines [[Text "First.Item First"]]];
                   [JustInlines
-                     [[Text "First.Item "; WithFontStyle (Italic, [Text "Second"])];
+                     [[Text "First.Item "; WithFontStyle (FontStyle.Italic, [Text "Second"])];
                       []; [Text "Second Text"]]]]); Paragraph [[Text "First Text"]];
               HtmlList (false, [[JustInlines [[Text "First.Item Third"]]]])];
              [Paragraph [[Text "Second"]; [Text "Second Text"]]]])]
