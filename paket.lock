@@ -22,7 +22,7 @@ NUGET
       System.Runtime.InteropServices.RuntimeInformation (>= 4.3)
     YamlDotNet (8.1.2)
   remote: https://gitlab.com/api/v4/projects/28574921/packages/nuget/index.json
-    FSharpMyExt (1.13.0)
+    FSharpMyExt (1.13.1)
       FParsec (>= 1.1.1)
       FSharp.Core (>= 4.7.2)
       Fuchu (>= 1.1)
