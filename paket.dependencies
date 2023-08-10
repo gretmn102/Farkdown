@@ -1,8 +1,8 @@
 strategy: min
 storage: none
-source https://www.nuget.org/api/v2
+source https://api.nuget.org/v3/index.json
 
-framework: >= net461
+framework: net461, netstandard2.0, netcoreapp3.1
 nuget FSharp.Core = 5.0.1
 nuget FParsec
 nuget HtmlAgilityPack
@@ -12,10 +12,10 @@ source https://gitlab.com/api/v4/projects/28574921/packages/nuget/index.json
 nuget FSharpMyExt
 
 group Build
-    source https://api.nuget.org/v3/index.json
-    framework: netstandard2.0
     storage: none
+    source https://api.nuget.org/v3/index.json
 
+    framework: netstandard2.0
     nuget FSharp.Core = 5.0.1
     nuget Fake.Core.Target = 5.20.4
     nuget Fake.Core.ReleaseNotes = 5.20.4
