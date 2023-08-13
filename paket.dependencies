@@ -9,7 +9,8 @@ nuget HtmlAgilityPack
 nuget Fuchu
 
 source https://gitlab.com/api/v4/projects/28574921/packages/nuget/index.json
-nuget FSharpMyExt
+nuget FSharpMyExt prerelease
+nuget FUniversalParser
 
 group Build
     storage: none

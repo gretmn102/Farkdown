@@ -246,11 +246,12 @@ module FlowContent =
                 FlowContent.Header(h, Inlines.format xss)
         f
 
+#if !FABLE_COMPILER
 module HtmlToMarkdown =
     open FsharpMyExtension
     open FsharpMyExtension.HtmlAgilityPackExt
-    open Parser.Primitives
-    open Parser.ParHtmlNode2
+    open FUniversalParser.Primitives
+    open FUniversalParser.ParHtmlNode2
     type Parser<'a> = Pars<HtmlAgilityPack.HtmlNode, 'a, unit>
 
     let rec pinlines : Parser<Inline list> =
@@ -396,6 +397,7 @@ module HtmlToMarkdown =
         p2
     let start2 xs =
         run (ws >>. many p2 |>> List.concat .>> eof "p2 or eof") xs
+#endif
 
 type Document = list<FlowContent>
 
