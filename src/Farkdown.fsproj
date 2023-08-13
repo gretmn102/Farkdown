@@ -3,7 +3,8 @@
     <OutputType>Library</OutputType>
     <TargetFrameworks>netstandard2.0;net461</TargetFrameworks>
   </PropertyGroup>
-  <Target Name="SpicNSpan" AfterTargets="Clean">
+  <!-- framework is selected so that dotnet clean command don't delete the same thing twice -->
+  <Target Condition="'$(TargetFramework)' == 'net461'" Name="SpicNSpan" AfterTargets="Clean">
     <RemoveDir Directories="$(BaseOutputPath)" />
     <RemoveDir Directories="$(BaseIntermediateOutputPath)" />
   </Target>
