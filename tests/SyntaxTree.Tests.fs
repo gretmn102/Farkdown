@@ -1,8 +1,50 @@
 module SyntaxTree.Tests
 open Fuchu
+open FsharpMyExtension.FParsecExt
 
 open Farkdown.SyntaxTree
 open Farkdown.Helpers
+
+[<Tests>]
+let ``LineElement.Parser.pimage`` =
+    testList "LineElement.Parser.pimage" [
+        testCase "![]()" <| fun () ->
+            Assert.Equal(
+                "",
+                runResult LineElement.Parser.pimage "![]()",
+                Ok {| Alt = ""; Src = ""; Title = None; |}
+            )
+        testCase "![](https://example.com/image.png)" <| fun () ->
+            Assert.Equal(
+                "",
+                runResult LineElement.Parser.pimage "![](https://example.com/image.png)",
+                Ok {|
+                    Alt = ""
+                    Src = "https://example.com/image.png"
+                    Title = None
+                |}
+            )
+        testCase "![](https://example.com/image.png \"title\")" <| fun () ->
+            Assert.Equal(
+                "",
+                runResult LineElement.Parser.pimage "![](https://example.com/image.png \"title\")",
+                Ok {|
+                    Alt = ""
+                    Src = "https://example.com/image.png"
+                    Title = Some "title"
+                |}
+            )
+        testCase "![image alt](https://example.com/image.png \"title\")" <| fun () ->
+            Assert.Equal(
+                "",
+                runResult LineElement.Parser.pimage "![image alt](https://example.com/image.png \"title\")",
+                Ok {|
+                    Alt = "image alt"
+                    Src = "https://example.com/image.png"
+                    Title = Some "title"
+                |}
+            )
+    ]
 
 [<Tests>]
 let documentTests =

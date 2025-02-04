@@ -1,6 +1,11 @@
 namespace rec Farkdown.SyntaxTree
 open FsharpMyExtension
 
+module CommonParser =
+    open FParsec
+
+    type Parser<'a> = Parser<'a, unit>
+
 [<RequireQualifiedAccess>]
 type LineElement =
     | Bold of LineElement
@@ -75,6 +80,33 @@ module LineElement =
 
             | LineElement.Comment comment ->
                 showComment comment
+
+    module Parser =
+        open FParsec
+
+        open CommonParser
+
+        let pimage: Parser<_> =
+            pchar '!'
+            >>. pipe2
+                (between (pchar '[') (pchar ']') (
+                    manySatisfy ((<>) ']')
+                ))
+                (between (pchar '(') (pchar ')') (
+                    let ptitle =
+                        between (pchar '"') (pchar '"') (manySatisfy ((<>) '"'))
+                    manySatisfy (fun c ->
+                        not (c = ')' || System.Char.IsWhiteSpace c)
+                    )
+                    .>> spaces .>>. opt ptitle
+                ))
+                (fun alt (src, title) ->
+                    {|
+                        Alt = alt
+                        Src = src
+                        Title = title
+                    |}
+                )
 
 type Line = LineElement list
 
