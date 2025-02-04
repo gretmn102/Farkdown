@@ -118,6 +118,7 @@ type Statement =
         Comment s
 
 [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
+[<RequireQualifiedAccess>]
 module Statement =
     module Show =
         open FsharpMyExtension.ShowList
