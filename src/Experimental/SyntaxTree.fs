@@ -117,6 +117,7 @@ type Statement =
     static member MakeComment s =
         Comment s
 
+[<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
 module Statement =
     module Show =
         open FsharpMyExtension.ShowList
