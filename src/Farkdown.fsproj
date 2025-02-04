@@ -10,9 +10,8 @@
   </Target>
   <ItemGroup>
     <Content Include="**\*.fsproj; **\*.fs; **\*.fsi; **\*.js;" Exclude="**\*.fs.js; obj; bin" PackagePath="fable\" />
-    <Compile Include="Experimental\SyntaxTree.fs" />
-    <Compile Include="Experimental\Helpers.fs" />
-    <Compile Include="Markdown.fs" />
+    <Compile Include="SyntaxTree.fs" />
+    <Compile Include="Helpers.fs" />
   </ItemGroup>
   <Import Project="..\.paket\Paket.Restore.targets" />
 </Project>

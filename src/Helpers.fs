@@ -1,5 +1,5 @@
-module Farkdown.Experimental.Helpers
-open Farkdown.Experimental.SyntaxTree
+module Farkdown.Helpers
+open Farkdown.SyntaxTree
 
 let bold x = LineElement.Bold x
 let italic x = LineElement.Italic x

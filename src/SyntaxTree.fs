@@ -1,4 +1,4 @@
-namespace rec Farkdown.Experimental.SyntaxTree
+namespace rec Farkdown.SyntaxTree
 open FsharpMyExtension
 
 [<RequireQualifiedAccess>]

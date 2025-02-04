@@ -1,7 +1,8 @@
-module Tests.Experimental
+module SyntaxTree.Tests
 open Fuchu
-open Farkdown.Experimental.SyntaxTree
-open Farkdown.Experimental.Helpers
+
+open Farkdown.SyntaxTree
+open Farkdown.Helpers
 
 [<Tests>]
 let documentTests =
