@@ -1,3 +1,8 @@
+## 0.3.0
+* feat!: remove `HtmlToMarkdown`
+* feat!: add to `Experimental.SyntaxTree.Statement` `RequireQualifiedAccess`
+* feat: add to `Experimental.SyntaxTree.Statement` module suffix
+
 ## 0.2.0
 * add netstandard2.0 target framework
 * add Fable
