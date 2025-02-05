@@ -47,6 +47,58 @@ let ``LineElement.Parser.pimage`` =
     ]
 
 [<Tests>]
+let ``LineElement.Parser.ptext`` =
+    testList "LineElement.Parser.ptext" [
+        testCase "empty" <| fun () ->
+            Assert.Equal(
+                "",
+                runResult LineElement.Parser.ptext "",
+                Error (String.concat System.Environment.NewLine [
+                    "Error in Ln: 1 Col: 1"
+                    "Note: The error occurred at the end of the input stream."
+                    "Expecting: text"
+                    ""
+                ])
+            )
+        testCase "!" <| fun () ->
+            Assert.Equal(
+                "",
+                runResult LineElement.Parser.ptext "!",
+                Ok "!"
+            )
+        testCase "![" <| fun () ->
+            Assert.Equal(
+                "",
+                runResult LineElement.Parser.ptext "![",
+                Error (String.concat System.Environment.NewLine [
+                    "Error in Ln: 1 Col: 1"
+                    "!["
+                    "^"
+                    "Expecting: text"
+                    ""
+                ])
+            )
+        testCase "!abc" <| fun () ->
+            Assert.Equal(
+                "",
+                runResult LineElement.Parser.ptext "!abc",
+                Ok "!abc"
+            )
+        testCase "abc!" <| fun () ->
+            Assert.Equal(
+                "",
+                runResult LineElement.Parser.ptext "abc!",
+                Ok "abc!"
+            )
+        testCase "abc![" <| fun () ->
+            Assert.Equal(
+                "",
+                runResult LineElement.Parser.ptext "abc![",
+                Ok "abc"
+            )
+    ]
+
+[<Tests>]
 let documentTests =
     testList "documentTests" [
         testCase "base" <| fun () ->

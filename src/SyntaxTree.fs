@@ -108,6 +108,12 @@ module LineElement =
                     |}
                 )
 
+        let ptext: Parser<_> =
+            many1Strings (
+                many1Satisfy (fun c -> not (c = '\n' || c = '!'))
+                <|> (pchar '!' >>? notFollowedByString "[" >>% "!")
+            ) <?> "text"
+
 type Line = LineElement list
 
 [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
