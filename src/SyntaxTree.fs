@@ -114,6 +114,12 @@ module LineElement =
                 <|> (pchar '!' >>? notFollowedByString "[" >>% "!")
             ) <?> "text"
 
+        let parse: Parser<_> =
+            choice [
+                pimage |>> fun x -> LineElement.Image(x.Src, x.Title |> Option.defaultValue "", x.Alt)
+                ptext |>> LineElement.Text
+            ]
+
 type Line = LineElement list
 
 [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
