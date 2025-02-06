@@ -99,6 +99,38 @@ let ``LineElement.Parser.ptext`` =
     ]
 
 [<Tests>]
+let ``Line.Parser.parse`` =
+    testList "Line.Parser.parse" [
+        testCase "empty" <| fun () ->
+            Assert.Equal(
+                "",
+                runResult Line.Parser.parse "",
+                Error (String.concat System.Environment.NewLine [
+                    "Error in Ln: 1 Col: 1"
+                    "Note: The error occurred at the end of the input stream."
+                    "Expecting: text or '!'"
+                    ""
+                ])
+            )
+        testCase "first line" <| fun () ->
+            Assert.Equal(
+                "",
+                runResult Line.Parser.parse "first line",
+                Ok [
+                    LineElement.Text "first line"
+                ]
+            )
+        testCase "first line\\nsecond line" <| fun () ->
+            Assert.Equal(
+                "",
+                runResult Line.Parser.parse "first line\nsecond line",
+                Ok [
+                    LineElement.Text "first line"
+                ]
+            )
+    ]
+
+[<Tests>]
 let documentTests =
     testList "documentTests" [
         testCase "base" <| fun () ->

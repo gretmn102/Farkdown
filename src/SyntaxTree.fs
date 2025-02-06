@@ -133,6 +133,14 @@ module Line =
             |> List.map (LineElement.Show.show show)
             |> joinsEmpty empty
 
+    module Parser =
+        open FParsec
+
+        open CommonParser
+
+        let parse: Parser<Line> =
+            many1 LineElement.Parser.parse
+
 [<RequireQualifiedAccess>]
 type ListItem = Line * Statement list
 
