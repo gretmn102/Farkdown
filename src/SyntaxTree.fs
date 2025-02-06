@@ -211,6 +211,20 @@ module Statement =
                 LineElement.Show.showComment comment
                 |> List.singleton
 
+    module Parser =
+        open FParsec
+
+        open CommonParser
+
+        let pheader (statements: Parser<Statement list>): Parser<_> =
+            pipe3
+                (many1SatisfyL ((=) '#') "one or more #" .>> spaces |>> fun x -> x.Length)
+                Line.Parser.parse
+                statements
+                (fun level line body ->
+                    {| Level = level; Line = line; Body = body |}
+                )
+
 type Document = Statement list
 
 [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]

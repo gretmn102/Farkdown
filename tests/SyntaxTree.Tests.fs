@@ -130,6 +130,72 @@ let ``Line.Parser.parse`` =
             )
     ]
 
+
+[<Tests>]
+let ``Statement.Parser.pheader`` =
+    let parser = Statement.Parser.pheader (FParsec.Primitives.preturn [])
+    testList "Statement.Parser.pheader" [
+        testCase "empty" <| fun () ->
+            Assert.Equal(
+                "",
+                runResult parser "",
+                Error (String.concat System.Environment.NewLine [
+                    "Error in Ln: 1 Col: 1"
+                    "Note: The error occurred at the end of the input stream."
+                    "Expecting: one or more #"
+                    ""
+                ])
+            )
+        testCase "lorem ipsum" <| fun () ->
+            Assert.Equal(
+                "",
+                runResult parser "lorem ipsum",
+                Error (String.concat System.Environment.NewLine [
+                    "Error in Ln: 1 Col: 1"
+                    "lorem ipsum"
+                    "^"
+                    "Expecting: one or more #"
+                    ""
+                ])
+            )
+        testCase "#Header" <| fun () ->
+            Assert.Equal(
+                "",
+                runResult parser "#Header",
+                Ok {|
+                    Level = 1
+                    Line = [
+                        LineElement.Text "Header"
+                    ]
+                    Body = []
+                |}
+            )
+        testCase "# Header" <| fun () ->
+            Assert.Equal(
+                "",
+                runResult parser "# Header",
+                Ok {|
+                    Level = 1
+                    Line = [
+                        LineElement.Text "Header"
+                    ]
+                    Body = []
+                |}
+            )
+        testCase "## Header" <| fun () ->
+            Assert.Equal(
+                "",
+                runResult parser "## Header",
+                Ok {|
+                    Level = 2
+                    Line = [
+                        LineElement.Text "Header"
+                    ]
+                    Body = []
+                |}
+            )
+    ]
+
 [<Tests>]
 let documentTests =
     testList "documentTests" [
