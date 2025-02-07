@@ -197,6 +197,61 @@ let ``Statement.Parser.pheader`` =
     ]
 
 [<Tests>]
+let ``Statement.Parser.pparagraph`` =
+    let parser = Statement.Parser.pparagraph
+    testList "Statement.Parser.pparagraph" [
+        testCase "empty" <| fun () ->
+            Assert.Equal(
+                "",
+                runResult parser "",
+                Error (String.concat System.Environment.NewLine [
+                    "Error in Ln: 1 Col: 1"
+                    "Note: The error occurred at the end of the input stream."
+                    "Expecting: newline, text or '!'"
+                    ""
+                ])
+            )
+        testCase "Hello" <| fun () ->
+            Assert.Equal(
+                "",
+                runResult parser "Hello",
+                Ok [[LineElement.Text "Hello"]]
+            )
+        testCase "First line\\nSecond line" <| fun () ->
+            Assert.Equal(
+                "",
+                runResult parser "First line\nSecond line",
+                Ok [
+                    [LineElement.Text "First line"]
+                    [LineElement.Text "Second line"]
+                ]
+            )
+        testCase "First line\\n" <| fun () ->
+            Assert.Equal(
+                "",
+                runResult parser "First line\n",
+                Ok [
+                    [LineElement.Text "First line"]
+                ]
+            )
+        testCase "\\n" <| fun () ->
+            Assert.Equal(
+                "",
+                runResult parser "\n",
+                Ok [[]]
+            )
+        testCase "\\nsecond line" <| fun () ->
+            Assert.Equal(
+                "",
+                runResult parser "\nsecond line",
+                Ok [
+                    []
+                    [LineElement.Text "second line"]
+                ]
+            )
+    ]
+
+[<Tests>]
 let documentTests =
     testList "documentTests" [
         testCase "base" <| fun () ->

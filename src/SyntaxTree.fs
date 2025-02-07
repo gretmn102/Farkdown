@@ -225,6 +225,12 @@ module Statement =
                     {| Level = level; Line = line; Body = body |}
                 )
 
+        let pparagraph: Parser<Line list> =
+            many1 (
+                (Line.Parser.parse .>> optional newline)
+                <|> newlineReturn []
+            )
+
 type Document = Statement list
 
 [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
