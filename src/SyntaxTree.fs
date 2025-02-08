@@ -233,7 +233,7 @@ module Statement =
         let pheader (statements: Parser<Statement list>): Parser<_> =
             pipe3
                 (many1SatisfyL ((=) '#') "one or more #" .>> spaces |>> fun x -> x.Length)
-                Line.Parser.parse
+                (Line.Parser.parse .>> skipMany newline)
                 statements
                 (fun level line body ->
                     {| Level = level; Line = line; Body = body |}
@@ -282,3 +282,16 @@ module Document =
         Show.show indent document
         |> ShowList.joinEmpty "\n"
         |> ShowList.show
+
+    module Parser =
+        open FParsec
+
+        open CommonParser
+
+        let parse: Parser<Document> =
+            let pstatement, refPStatement = createParserForwardedToRef()
+
+            refPStatement.Value <-
+                many (Statement.Parser.parse pstatement)
+
+            pstatement
