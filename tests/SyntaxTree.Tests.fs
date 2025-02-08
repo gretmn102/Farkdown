@@ -5,6 +5,28 @@ open FsharpMyExtension.FParsecExt
 open Farkdown.SyntaxTree
 open Farkdown.Helpers
 
+let runResult parser input =
+    FParsec.CharParsers.runParserOnString
+        parser
+        CommonParser.State.empty
+        ""
+        input
+    |> ParserResult.toResult
+    |> function
+        | Ok(x, _, _) -> Ok x
+        | Error(msgError, _, _) -> Error msgError
+
+let runResultState state parser input =
+    FParsec.CharParsers.runParserOnString
+        parser
+        state
+        ""
+        input
+    |> ParserResult.toResult
+    |> function
+        | Ok(x, state, _) -> Ok (x, state)
+        | Error(msgError, _, _) -> Error msgError
+
 [<Tests>]
 let ``LineElement.Parser.pimage`` =
     testList "LineElement.Parser.pimage" [
@@ -563,6 +585,29 @@ let ``Document.Parser.parse`` =
                     ]
                 ],
                 runResult parser rawDocument
+            )
+        testCase "nested headers" <| fun () ->
+            Assert.Equal(
+                "",
+                Ok [
+                    h1 [ text "1" ] [
+                        h2 [ text "1.2" ] []
+                    ]
+                    h1 [ text "2" ] [
+                        h2 [ text "2.1" ] [
+                            h3 [ text "2.1.1" ] []
+                        ]
+                        h2 [ text "2.2" ] []
+                    ]
+                ],
+                runResult parser (String.concat System.Environment.NewLine [
+                    "# 1"
+                    "## 1.2"
+                    "# 2"
+                    "## 2.1"
+                    "### 2.1.1"
+                    "## 2.2"
+                ])
             )
     ]
 
