@@ -139,7 +139,6 @@ module Line =
         open CommonParser
 
         let parse: Parser<Line> =
-
             notFollowedBy (
                 (pchar '*' .>> spaces1)
                 <|> pchar '#'
@@ -243,9 +242,9 @@ module Statement =
 
         let pparagraph: Parser<Line list> =
             many1 (
-                (Line.Parser.parse .>> optional newline)
-                <|> newlineReturn []
+                Line.Parser.parse .>> optional newline
             )
+            .>> skipMany newline
 
         let punorderedList: Parser<ListItem list> =
             many1 (

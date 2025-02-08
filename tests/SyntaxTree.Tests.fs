@@ -247,13 +247,13 @@ let ``Statement.Parser.pparagraph`` =
         testCase "empty" <| fun () ->
             Assert.Equal(
                 "",
-                runResult parser "",
                 Error (String.concat System.Environment.NewLine [
                     "Error in Ln: 1 Col: 1"
                     "Note: The error occurred at the end of the input stream."
-                    "Expecting: newline, not * <spaces> or # in line, text or '!'"
+                    "Expecting: not * <spaces> or # in line, text or '!'"
                     ""
-                ])
+                ]),
+                runResult parser ""
             )
         testCase "Hello" <| fun () ->
             Assert.Equal(
@@ -281,17 +281,24 @@ let ``Statement.Parser.pparagraph`` =
         testCase "\\n" <| fun () ->
             Assert.Equal(
                 "",
-                runResult parser "\n",
-                Ok [[]]
+                Error (String.concat System.Environment.NewLine [
+                    "Error in Ln: 1 Col: 1"
+                    "Note: The error occurred on an empty line."
+                    "Expecting: not * <spaces> or # in line, text or '!'"
+                    ""
+                ]),
+                runResult parser "\n"
             )
         testCase "\\nsecond line" <| fun () ->
             Assert.Equal(
                 "",
-                runResult parser "\nsecond line",
-                Ok [
-                    []
-                    [LineElement.Text "second line"]
-                ]
+                Error (String.concat System.Environment.NewLine [
+                    "Error in Ln: 1 Col: 1"
+                    "Note: The error occurred on an empty line."
+                    "Expecting: not * <spaces> or # in line, text or '!'"
+                    ""
+                ]),
+                runResult parser "\nsecond line"
             )
     ]
 
@@ -429,6 +436,20 @@ let ``Statement.Parser.parse`` =
                     ]
                 ),
                 runResult parser "just text"
+            )
+        testCase "1.1\\n1.2\\n\\n2.1" <| fun () ->
+            Assert.Equal(
+                "",
+                Ok [
+                    Statement.Paragraph [
+                        [ LineElement.Text "1.1" ]
+                        [ LineElement.Text "1.2" ]
+                    ]
+                    Statement.Paragraph [
+                        [ LineElement.Text "2.1" ]
+                    ]
+                ],
+                runResult (FParsec.Primitives.many parser) "1.1\n1.2\n\n2.1"
             )
     ]
 
