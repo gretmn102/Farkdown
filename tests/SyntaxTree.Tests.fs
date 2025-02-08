@@ -382,6 +382,34 @@ let ``Statement.Parser.parse`` =
                 ),
                 runResult parser "# header"
             )
+        testCase "# header\\ntext" <| fun () ->
+            Assert.Equal(
+                "",
+                Ok (
+                    Statement.Header(1, [ LineElement.Text "header" ], [])
+                ),
+                runResult
+                    (
+                        FParsec.Primitives.(.>>)
+                            parser
+                            (FParsec.CharParsers.pstring "text")
+                    )
+                    "# header\ntext"
+            )
+        testCase "# header\\n\\ntext" <| fun () ->
+            Assert.Equal(
+                "",
+                Ok (
+                    Statement.Header(1, [ LineElement.Text "header" ], [])
+                ),
+                runResult
+                    (
+                        FParsec.Primitives.(.>>)
+                            parser
+                            (FParsec.CharParsers.pstring "text")
+                    )
+                    "# header\n\ntext"
+            )
         testCase "* list item" <| fun () ->
             Assert.Equal(
                 "",

@@ -239,6 +239,7 @@ module Statement =
                 (fun level line body ->
                     {| Level = level; Line = line; Body = body |}
                 )
+            .>> skipMany newline
 
         let pparagraph: Parser<Line list> =
             many1 (
