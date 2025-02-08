@@ -241,6 +241,11 @@ module Statement =
                 <|> newlineReturn []
             )
 
+        let punorderedList: Parser<ListItem list> =
+            many1 (
+                ListItem.Parser.parse .>> skipMany newline
+            )
+
 type Document = Statement list
 
 [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]

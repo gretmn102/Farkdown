@@ -252,6 +252,50 @@ let ``Statement.Parser.pparagraph`` =
     ]
 
 [<Tests>]
+let ``Statement.Parser.punorderedList`` =
+    let parser = Statement.Parser.punorderedList
+    testList "Statement.Parser.pparagraph" [
+        testCase "just text" <| fun () ->
+            Assert.Equal(
+                "",
+                Error (String.concat System.Environment.NewLine [
+                    "Error in Ln: 1 Col: 1"
+                    "just text"
+                    "^"
+                    "Expecting: '*'"
+                    ""
+                ]),
+                runResult parser "just text"
+            )
+        testCase "* First item\\n* Second item" <| fun () ->
+            Assert.Equal(
+                "",
+                Ok [
+                    [LineElement.Text "First item"], []
+                    [LineElement.Text "Second item"], []
+                ],
+                runResult parser "* First item\n* Second item"
+            )
+        testCase "* First item\\n\\n* Second item" <| fun () ->
+            Assert.Equal(
+                "",
+                Ok [
+                    [LineElement.Text "First item"], []
+                    [LineElement.Text "Second item"], []
+                ],
+                runResult parser "* First item\n\n* Second item"
+            )
+        testCase "* First item\\nSecond line" <| fun () ->
+            Assert.Equal(
+                "",
+                Ok [
+                    [LineElement.Text "First item"], []
+                ],
+                runResult parser "* First item\nSecond line"
+            )
+    ]
+
+[<Tests>]
 let ``ListItem.Parser.parse`` =
     let parser = ListItem.Parser.parse
     testList "Statement.Parser.pparagraph" [
