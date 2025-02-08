@@ -517,7 +517,6 @@ let rawDocument =
         "![alt](https://example.com/image.png \"title\")"
     ] |> String.concat "\n"
 
-
 [<Tests>]
 let ``Document.Parser.parse`` =
     let parser = Document.Parser.parse
@@ -525,7 +524,44 @@ let ``Document.Parser.parse`` =
         testCase "base" <| fun () ->
             Assert.Equal(
                 "",
-                Ok [],
+                Ok [
+                    h1 [ text "Tales of <!-- inline commentary -->***formatting***" ] [
+                        p [
+                            [ text "Paragraph one." ]
+                            [ text "A sentence with *a soft* line break." ]
+                        ]
+
+                        p [[ text "Paragraph two." ]]
+
+                        p [[ text "Commentary between statements." ]]
+
+                        ul [
+                            li [ text "Unordered item one" ] [ ]
+                        ]
+
+                        p [[ text "Item text"]]
+
+                        ul [
+                            li [ text "Item *two*" ] []
+                        ]
+
+                        p [
+                            [ text "    1. Ordered item one" ]
+                            [ text "        <!-- Commentary between statements. -->" ]
+                        ]
+
+                        p [[ text "Paragraph three." ]]
+
+                        h2 [ text "Chapter 1" ] [
+                            p [[ text "Contents of chapter one." ]]
+
+                            p [
+                                [ text "[A link that leads to the *best* site](https://example.com \"best site\")" ]
+                                [ img "https://example.com/image.png" "title" "alt" ]
+                            ]
+                        ]
+                    ]
+                ],
                 runResult parser rawDocument
             )
     ]
