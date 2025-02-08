@@ -233,7 +233,7 @@ module Statement =
         let pheader (statements: Parser<Statement list>): Parser<_> =
             pipe3
                 (many1SatisfyL ((=) '#') "one or more #" .>> spaces |>> fun x -> x.Length)
-                Line.Parser.parse
+                (Line.Parser.parse .>> skipMany newline)
                 statements
                 (fun level line body ->
                     {| Level = level; Line = line; Body = body |}
