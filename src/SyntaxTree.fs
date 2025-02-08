@@ -282,3 +282,16 @@ module Document =
         Show.show indent document
         |> ShowList.joinEmpty "\n"
         |> ShowList.show
+
+    module Parser =
+        open FParsec
+
+        open CommonParser
+
+        let parse: Parser<Document> =
+            let pstatement, refPStatement = createParserForwardedToRef()
+
+            refPStatement.Value <-
+                many (Statement.Parser.parse pstatement)
+
+            pstatement
