@@ -139,7 +139,8 @@ module Line =
         open CommonParser
 
         let parse: Parser<Line> =
-            many1 LineElement.Parser.parse
+            notFollowedBy (pchar '*' .>> spaces1) <?> "not * <spaces> in line"
+            >>. many1 LineElement.Parser.parse
 
 [<RequireQualifiedAccess>]
 type ListItem = Line * Statement list

@@ -108,7 +108,7 @@ let ``Line.Parser.parse`` =
                 Error (String.concat System.Environment.NewLine [
                     "Error in Ln: 1 Col: 1"
                     "Note: The error occurred at the end of the input stream."
-                    "Expecting: text or '!'"
+                    "Expecting: not * <spaces> in line, text or '!'"
                     ""
                 ])
             )
@@ -127,6 +127,26 @@ let ``Line.Parser.parse`` =
                 Ok [
                     LineElement.Text "first line"
                 ]
+            )
+        testCase "* list item" <| fun () ->
+            Assert.Equal(
+                "",
+                Error (String.concat System.Environment.NewLine [
+                    "Error in Ln: 1 Col: 1"
+                    "* list item"
+                    "^"
+                    "Expecting: not * <spaces> in line"
+                    ""
+                ]),
+                runResult Line.Parser.parse "* list item"
+            )
+        testCase "*italic*" <| fun () ->
+            Assert.Equal(
+                "",
+                Ok [
+                    LineElement.Text "*italic*"
+                ],
+                runResult Line.Parser.parse "*italic*"
             )
     ]
 
@@ -207,7 +227,7 @@ let ``Statement.Parser.pparagraph`` =
                 Error (String.concat System.Environment.NewLine [
                     "Error in Ln: 1 Col: 1"
                     "Note: The error occurred at the end of the input stream."
-                    "Expecting: newline, text or '!'"
+                    "Expecting: newline, not * <spaces> in line, text or '!'"
                     ""
                 ])
             )
@@ -254,7 +274,7 @@ let ``Statement.Parser.pparagraph`` =
 [<Tests>]
 let ``Statement.Parser.punorderedList`` =
     let parser = Statement.Parser.punorderedList
-    testList "Statement.Parser.pparagraph" [
+    testList "Statement.Parser.punorderedList" [
         testCase "just text" <| fun () ->
             Assert.Equal(
                 "",
@@ -298,7 +318,7 @@ let ``Statement.Parser.punorderedList`` =
 [<Tests>]
 let ``ListItem.Parser.parse`` =
     let parser = ListItem.Parser.parse
-    testList "Statement.Parser.pparagraph" [
+    testList "ListItem.Parser.parse" [
         testCase "*item" <| fun () ->
             Assert.Equal(
                 "",
