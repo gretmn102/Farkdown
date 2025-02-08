@@ -252,6 +252,37 @@ let ``Statement.Parser.pparagraph`` =
     ]
 
 [<Tests>]
+let ``ListItem.Parser.parse`` =
+    let parser = ListItem.Parser.parse
+    testList "Statement.Parser.pparagraph" [
+        testCase "*item" <| fun () ->
+            Assert.Equal(
+                "",
+                Error (String.concat System.Environment.NewLine [
+                    "Error in Ln: 1 Col: 1"
+                    "*item"
+                    "^"
+                    ""
+                    "The parser backtracked after:"
+                    "  Error in Ln: 1 Col: 2"
+                    "  *item"
+                    "   ^"
+                    "  Expecting: whitespace"
+                    ""
+                ]),
+                runResult parser "*item"
+            )
+        testCase "* item" <| fun () ->
+            Assert.Equal(
+                "",
+                Ok (
+                    [LineElement.Text "item"], []
+                ),
+                runResult parser "* item"
+            )
+    ]
+
+[<Tests>]
 let documentTests =
     testList "documentTests" [
         testCase "base" <| fun () ->

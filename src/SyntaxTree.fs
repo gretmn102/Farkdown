@@ -159,6 +159,16 @@ module ListItem =
                 showStatements statements |> List.map ((<<) indent)
             item::body
 
+    module Parser =
+        open FParsec
+
+        open CommonParser
+
+        let parse: Parser<ListItem> =
+            pchar '*' .>>? spaces1
+            >>. Line.Parser.parse
+            |>> fun line -> line, []
+
 [<RequireQualifiedAccess>]
 type Statement =
     | Header of level: int * Line * Statement list
