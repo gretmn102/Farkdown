@@ -11,6 +11,7 @@ let url href title description =
 
 let h1 line statements = Statement.Header(1, line, statements)
 let h2 line statements = Statement.Header(2, line, statements)
+let h3 line statements = Statement.Header(3, line, statements)
 
 let p statements = Statement.Paragraph statements
 
