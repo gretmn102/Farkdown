@@ -246,6 +246,13 @@ module Statement =
                 ListItem.Parser.parse .>> skipMany newline
             )
 
+        let parse pstatements: Parser<Statement> =
+            choice [
+                pheader pstatements |>> fun x -> Statement.Header(x.Level, x.Line, x.Body)
+                punorderedList |>> fun items -> Statement.List(false, items)
+                pparagraph |>> Statement.Paragraph
+            ]
+
 type Document = Statement list
 
 [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]

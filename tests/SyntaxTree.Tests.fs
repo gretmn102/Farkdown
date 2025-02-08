@@ -327,6 +327,40 @@ let ``ListItem.Parser.parse`` =
     ]
 
 [<Tests>]
+let ``Statement.Parser.parse`` =
+    let parser = Statement.Parser.parse (FParsec.Primitives.preturn [])
+    testList "Statement.Parser.parse" [
+        testCase "# header" <| fun () ->
+            Assert.Equal(
+                "",
+                Ok (
+                    Statement.Header(1, [ LineElement.Text "header" ], [])
+                ),
+                runResult parser "# header"
+            )
+        testCase "* list item" <| fun () ->
+            Assert.Equal(
+                "",
+                Ok (
+                    Statement.List(false, [
+                        [LineElement.Text "list item"], []
+                    ])
+                ),
+                runResult parser "* list item"
+            )
+        testCase "just text" <| fun () ->
+            Assert.Equal(
+                "",
+                Ok (
+                    Statement.Paragraph [
+                        [ LineElement.Text "just text" ]
+                    ]
+                ),
+                runResult parser "just text"
+            )
+    ]
+
+[<Tests>]
 let documentTests =
     testList "documentTests" [
         testCase "base" <| fun () ->
