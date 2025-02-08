@@ -108,7 +108,7 @@ let ``Line.Parser.parse`` =
                 Error (String.concat System.Environment.NewLine [
                     "Error in Ln: 1 Col: 1"
                     "Note: The error occurred at the end of the input stream."
-                    "Expecting: not * <spaces> in line, text or '!'"
+                    "Expecting: not * <spaces> or # in line, text or '!'"
                     ""
                 ])
             )
@@ -135,7 +135,7 @@ let ``Line.Parser.parse`` =
                     "Error in Ln: 1 Col: 1"
                     "* list item"
                     "^"
-                    "Expecting: not * <spaces> in line"
+                    "Expecting: not * <spaces> or # in line"
                     ""
                 ]),
                 runResult Line.Parser.parse "* list item"
@@ -147,6 +147,30 @@ let ``Line.Parser.parse`` =
                     LineElement.Text "*italic*"
                 ],
                 runResult Line.Parser.parse "*italic*"
+            )
+        testCase "#Header" <| fun () ->
+            Assert.Equal(
+                "",
+                Error (String.concat System.Environment.NewLine [
+                    "Error in Ln: 1 Col: 1"
+                    "#Header"
+                    "^"
+                    "Expecting: not * <spaces> or # in line"
+                    ""
+                ]),
+                runResult Line.Parser.parse "#Header"
+            )
+        testCase "# Header" <| fun () ->
+            Assert.Equal(
+                "",
+                Error (String.concat System.Environment.NewLine [
+                    "Error in Ln: 1 Col: 1"
+                    "# Header"
+                    "^"
+                    "Expecting: not * <spaces> or # in line"
+                    ""
+                ]),
+                runResult Line.Parser.parse "# Header"
             )
     ]
 
@@ -227,7 +251,7 @@ let ``Statement.Parser.pparagraph`` =
                 Error (String.concat System.Environment.NewLine [
                     "Error in Ln: 1 Col: 1"
                     "Note: The error occurred at the end of the input stream."
-                    "Expecting: newline, not * <spaces> in line, text or '!'"
+                    "Expecting: newline, not * <spaces> or # in line, text or '!'"
                     ""
                 ])
             )

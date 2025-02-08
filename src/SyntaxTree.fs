@@ -139,7 +139,11 @@ module Line =
         open CommonParser
 
         let parse: Parser<Line> =
-            notFollowedBy (pchar '*' .>> spaces1) <?> "not * <spaces> in line"
+
+            notFollowedBy (
+                (pchar '*' .>> spaces1)
+                <|> pchar '#'
+            ) <?> "not * <spaces> or # in line"
             >>. many1 LineElement.Parser.parse
 
 [<RequireQualifiedAccess>]
