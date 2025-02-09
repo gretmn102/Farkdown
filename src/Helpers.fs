@@ -5,7 +5,11 @@ let bold x = LineElement.Bold x
 let italic x = LineElement.Italic x
 let text s = LineElement.Text s
 let img src title alt =
-    LineElement.Image(src, title, alt)
+    LineElement.Image {
+        Src = src
+        Title = title
+        Alt = alt
+    }
 let url href title description =
     LineElement.Link {
         Href = href
