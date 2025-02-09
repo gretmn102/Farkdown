@@ -9,9 +9,15 @@ let img src title alt =
 let url href title description =
     LineElement.Url(href, title, description)
 
-let h1 line statements = Statement.Header(1, line, statements)
-let h2 line statements = Statement.Header(2, line, statements)
-let h3 line statements = Statement.Header(3, line, statements)
+let h level title body =
+    Statement.Header {
+        Level = level
+        Title = title
+        Body = body
+    }
+let h1 = h 1
+let h2 = h 2
+let h3 = h 3
 
 let p statements = Statement.Paragraph statements
 

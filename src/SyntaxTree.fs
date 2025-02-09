@@ -49,6 +49,21 @@ module CommonParser =
 
     type Parser<'a> = Parser<'a, State>
 
+    let psharps: Parser<_> =
+        many1SatisfyL ((=) '#') "one or more #"
+        |>> fun x -> x.Length
+
+    let updateNestingLevel updating: Parser<_> =
+        getUserState
+        >>= fun state ->
+            setUserState (updating state)
+
+    let pushNestingLevel level: Parser<_> =
+        updateNestingLevel (State.pushNestingLevel level)
+
+    let popNestingLevel: Parser<_> =
+        updateNestingLevel (State.popNestingLevel >> snd)
+
 [<RequireQualifiedAccess>]
 type LineElement =
     | Bold of LineElement
@@ -216,9 +231,49 @@ module ListItem =
             >>. Line.Parser.parse
             |>> fun line -> line, []
 
+type Header =
+    {
+        Level: int
+        Title: Line
+        Body: Statement list
+    }
+
+[<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
+[<RequireQualifiedAccess>]
+module Header =
+    module Show =
+        open FsharpMyExtension.ShowList
+
+        let show (showStatements: Statement list -> ShowS list) (header: Header) =
+            let stringHeader =
+                replicate header.Level '#' << showChar ' ' << Line.Show.show header.Title
+            let body =
+                showStatements header.Body
+            stringHeader::body
+
+    module Parser =
+        open FParsec
+
+        open CommonParser
+
+        let parse (pstatements: Parser<Statement list>): Parser<_> =
+            let p currentLevel =
+                pipe2
+                    (Line.Parser.parse .>> skipMany newline)
+                    pstatements
+                    (fun line body ->
+                        { Level = currentLevel; Title = line; Body = body }
+                    )
+            psharps .>> spaces
+            >>= fun currentLevel ->
+                pushNestingLevel currentLevel
+                >>. p currentLevel
+                .>> popNestingLevel
+            .>> skipMany newline
+
 [<RequireQualifiedAccess>]
 type Statement =
-    | Header of level: int * Line * Statement list
+    | Header of Header
     | Paragraph of Line list
     | Comment of string
     | List of isOrdered: bool * items: ListItem list
@@ -257,12 +312,8 @@ module Statement =
 
                 xs |> List.concat
 
-            | Statement.Header(level, line, statements) ->
-                let header =
-                    replicate level '#' << showChar ' ' << Line.Show.show line
-                let body =
-                    showStatements statements
-                header::body
+            | Statement.Header header ->
+                Header.Show.show showStatements header
 
             | Statement.Comment comment ->
                 LineElement.Show.showComment comment
@@ -272,21 +323,6 @@ module Statement =
         open FParsec
 
         open CommonParser
-
-        let psharps: Parser<_> =
-            many1SatisfyL ((=) '#') "one or more #"
-            |>> fun x -> x.Length
-
-        let updateNestingLevel updating: Parser<_> =
-            getUserState
-            >>= fun state ->
-                setUserState (updating state)
-
-        let pushNestingLevel level: Parser<_> =
-            updateNestingLevel (State.pushNestingLevel level)
-
-        let popNestingLevel: Parser<_> =
-            updateNestingLevel (State.popNestingLevel >> snd)
 
         let notFollowedByLevelThanCurrent: Parser<_> =
             notFollowedBy (
@@ -303,21 +339,6 @@ module Statement =
                         fail "currentLevel > 0" charStream
             )
 
-        let pheader (pstatements: Parser<Statement list>): Parser<_> =
-            let p currentLevel =
-                pipe2
-                    (Line.Parser.parse .>> skipMany newline)
-                    pstatements
-                    (fun line body ->
-                        {| Level = currentLevel; Line = line; Body = body |}
-                    )
-            psharps .>> spaces
-            >>= fun currentLevel ->
-                pushNestingLevel currentLevel
-                >>. p currentLevel
-                .>> popNestingLevel
-            .>> skipMany newline
-
         let pparagraph: Parser<Line list> =
             many1 (
                 Line.Parser.parse .>> optional newline
@@ -332,7 +353,7 @@ module Statement =
         let parse pstatements: Parser<Statement> =
             notFollowedByLevelThanCurrent
             >>? choice [
-                pheader pstatements |>> fun x -> Statement.Header(x.Level, x.Line, x.Body)
+                Header.Parser.parse pstatements |>> Statement.Header
                 punorderedList |>> fun items -> Statement.List(false, items)
                 pparagraph |>> Statement.Paragraph
             ]
