@@ -3,5 +3,4 @@ group Tests
     FuChu
     FSharpMyExt
     FParsec
-    HtmlAgilityPack
     FUniversalParser
