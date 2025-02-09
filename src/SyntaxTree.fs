@@ -75,7 +75,7 @@ type LineElement =
     /// ```markdown
     /// [description](https://example.com "Title of image")
     /// ```
-    | Url of href: string * title: string * description: LineElement list
+    | Link of href: string * title: string * description: LineElement list
     /// ```markdown
     /// ![Alt-text](https://example.com/image.png "Title of image")
     /// `````
@@ -113,7 +113,7 @@ module LineElement =
             | LineElement.Underline(lineElement) ->
                 f (showString "__") lineElement
 
-            | LineElement.Url(href, title, description) ->
+            | LineElement.Link(href, title, description) ->
                 let title =
                     if title = "" then
                         empty
