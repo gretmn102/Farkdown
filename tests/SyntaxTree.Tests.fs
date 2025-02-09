@@ -69,6 +69,50 @@ let ``LineElement.Parser.pimage`` =
     ]
 
 [<Tests>]
+let ``LineElement.Parser.plink`` =
+    let parser = LineElement.Parser.plink Line.Parser.parse
+    testList "LineElement.Parser.plink" [
+        testCase "[]()" <| fun () ->
+            Assert.Equal(
+                "",
+                runResult parser "[]()",
+                Ok {| Description = []; Href = ""; Title = None; |}
+            )
+        testCase "[](https://example.com/image.png)" <| fun () ->
+            Assert.Equal(
+                "",
+                runResult parser "[](https://example.com/image.png)",
+                Ok {|
+                    Description = []
+                    Href = "https://example.com/image.png"
+                    Title = None
+                |}
+            )
+        testCase "[](https://example.com/image.png \"title\")" <| fun () ->
+            Assert.Equal(
+                "",
+                runResult parser "[](https://example.com/image.png \"title\")",
+                Ok {|
+                    Description = []
+                    Href = "https://example.com/image.png"
+                    Title = Some "title"
+                |}
+            )
+        testCase "[image alt](https://example.com/image.png \"title\")" <| fun () ->
+            Assert.Equal(
+                "",
+                runResult parser "[image alt](https://example.com/image.png \"title\")",
+                Ok {|
+                    Description = [
+                        LineElement.Text "image alt"
+                    ]
+                    Href = "https://example.com/image.png"
+                    Title = Some "title"
+                |}
+            )
+    ]
+
+[<Tests>]
 let ``LineElement.Parser.ptext`` =
     testList "LineElement.Parser.ptext" [
         testCase "empty" <| fun () ->
@@ -95,6 +139,18 @@ let ``LineElement.Parser.ptext`` =
                 Error (String.concat System.Environment.NewLine [
                     "Error in Ln: 1 Col: 1"
                     "!["
+                    "^"
+                    "Expecting: text"
+                    ""
+                ])
+            )
+        testCase "[" <| fun () ->
+            Assert.Equal(
+                "",
+                runResult LineElement.Parser.ptext "[",
+                Error (String.concat System.Environment.NewLine [
+                    "Error in Ln: 1 Col: 1"
+                    "["
                     "^"
                     "Expecting: text"
                     ""
@@ -130,7 +186,7 @@ let ``Line.Parser.parse`` =
                 Error (String.concat System.Environment.NewLine [
                     "Error in Ln: 1 Col: 1"
                     "Note: The error occurred at the end of the input stream."
-                    "Expecting: not * <spaces> or # in line, text or '!'"
+                    "Expecting: not * <spaces> or # in line, text, '!' or '['"
                     ""
                 ])
             )
@@ -266,7 +322,7 @@ let ``Statement.Parser.pparagraph`` =
                 Error (String.concat System.Environment.NewLine [
                     "Error in Ln: 1 Col: 1"
                     "Note: The error occurred at the end of the input stream."
-                    "Expecting: not * <spaces> or # in line, text or '!'"
+                    "Expecting: not * <spaces> or # in line, text, '!' or '['"
                     ""
                 ]),
                 runResult parser ""
@@ -300,7 +356,7 @@ let ``Statement.Parser.pparagraph`` =
                 Error (String.concat System.Environment.NewLine [
                     "Error in Ln: 1 Col: 1"
                     "Note: The error occurred on an empty line."
-                    "Expecting: not * <spaces> or # in line, text or '!'"
+                    "Expecting: not * <spaces> or # in line, text, '!' or '['"
                     ""
                 ]),
                 runResult parser "\n"
@@ -311,7 +367,7 @@ let ``Statement.Parser.pparagraph`` =
                 Error (String.concat System.Environment.NewLine [
                     "Error in Ln: 1 Col: 1"
                     "Note: The error occurred on an empty line."
-                    "Expecting: not * <spaces> or # in line, text or '!'"
+                    "Expecting: not * <spaces> or # in line, text, '!' or '['"
                     ""
                 ]),
                 runResult parser "\nsecond line"
@@ -572,7 +628,7 @@ let ``Document.Parser.parse`` =
                             p [[ text "Contents of chapter one." ]]
 
                             p [
-                                [ text "[A link that leads to the *best* site](https://example.com \"best site\")" ]
+                                [ url "https://example.com" "best site" [ text "A link that leads to the *best* site" ] ]
                                 [ img "https://example.com/image.png" "title" "alt" ]
                             ]
                         ]
