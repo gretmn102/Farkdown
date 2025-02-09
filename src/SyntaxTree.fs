@@ -116,6 +116,57 @@ module Link =
                     }
                 )
 
+type Image =
+    {
+        Src: string
+        Title: string
+        Alt: string
+    }
+
+[<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
+[<RequireQualifiedAccess>]
+module Image =
+    module Show =
+        open FsharpMyExtension.ShowList
+
+        let show (image: Image) =
+            let title =
+                if image.Title = "" then
+                    empty
+                else
+                    showChar ' ' << showAutoParen "\"" (showString image.Title)
+
+            showChar '!'
+            << showChar '[' << showString image.Alt << showChar ']'
+            << showAutoParen "(" (showString image.Src << title)
+
+    module Parser =
+        open FParsec
+
+        open CommonParser
+
+        let parser: Parser<Image> =
+            pchar '!'
+            >>. pipe2
+                (between (pchar '[') (pchar ']') (
+                    manySatisfy ((<>) ']')
+                ))
+                (between (pchar '(') (pchar ')') (
+                    let ptitle =
+                        between (pchar '"') (pchar '"') (manySatisfy ((<>) '"'))
+                    manySatisfy (fun c ->
+                        not (c = ')' || System.Char.IsWhiteSpace c)
+                    )
+                    .>> spaces .>>. opt ptitle
+                ))
+                (fun alt (src, title) ->
+                    {
+                        Alt = alt
+                        Src = src
+                        Title = Option.defaultValue "" title
+                    }
+                )
+
 [<RequireQualifiedAccess>]
 type LineElement =
     | Bold of LineElement
@@ -131,7 +182,7 @@ type LineElement =
     /// ```markdown
     /// ![Alt-text](https://example.com/image.png "Title of image")
     /// `````
-    | Image of src: string * title: string * alt: string
+    | Image of Image
 
     static member MakeComment s =
         Comment s
@@ -168,16 +219,8 @@ module LineElement =
             | LineElement.Link link ->
                 Link.Show.show showLine link
 
-            | LineElement.Image(src, title, alt) ->
-                let title =
-                    if title = "" then
-                        empty
-                    else
-                        showChar ' ' << showAutoParen "\"" (showString title)
-
-                showChar '!'
-                << showChar '[' << showString alt << showChar ']'
-                << showAutoParen "(" (showString src << title)
+            | LineElement.Image image ->
+                Image.Show.show image
 
             | LineElement.Comment comment ->
                 showComment comment
@@ -186,28 +229,6 @@ module LineElement =
         open FParsec
 
         open CommonParser
-
-        let pimage: Parser<_> =
-            pchar '!'
-            >>. pipe2
-                (between (pchar '[') (pchar ']') (
-                    manySatisfy ((<>) ']')
-                ))
-                (between (pchar '(') (pchar ')') (
-                    let ptitle =
-                        between (pchar '"') (pchar '"') (manySatisfy ((<>) '"'))
-                    manySatisfy (fun c ->
-                        not (c = ')' || System.Char.IsWhiteSpace c)
-                    )
-                    .>> spaces .>>. opt ptitle
-                ))
-                (fun alt (src, title) ->
-                    {|
-                        Alt = alt
-                        Src = src
-                        Title = title
-                    |}
-                )
 
         let ptext: Parser<_> =
             many1Strings (
@@ -218,7 +239,7 @@ module LineElement =
         let parse pline: Parser<_> =
             choice [
                 Link.Parser.parser pline |>> LineElement.Link
-                pimage |>> fun x -> LineElement.Image(x.Src, x.Title |> Option.defaultValue "", x.Alt)
+                Image.Parser.parser |>> LineElement.Image
                 ptext |>> LineElement.Text
             ]
 
