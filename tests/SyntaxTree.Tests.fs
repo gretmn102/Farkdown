@@ -69,46 +69,46 @@ let ``LineElement.Parser.pimage`` =
     ]
 
 [<Tests>]
-let ``LineElement.Parser.plink`` =
-    let parser = LineElement.Parser.plink Line.Parser.parse
-    testList "LineElement.Parser.plink" [
+let ``Link.Parser.parser`` =
+    let parser = Link.Parser.parser Line.Parser.parse
+    testList "Link.Parser.parser" [
         testCase "[]()" <| fun () ->
             Assert.Equal(
                 "",
                 runResult parser "[]()",
-                Ok {| Description = []; Href = ""; Title = None; |}
+                Ok { Description = []; Href = ""; Title = ""; }
             )
         testCase "[](https://example.com/image.png)" <| fun () ->
             Assert.Equal(
                 "",
                 runResult parser "[](https://example.com/image.png)",
-                Ok {|
+                Ok {
                     Description = []
                     Href = "https://example.com/image.png"
-                    Title = None
-                |}
+                    Title = ""
+                }
             )
         testCase "[](https://example.com/image.png \"title\")" <| fun () ->
             Assert.Equal(
                 "",
                 runResult parser "[](https://example.com/image.png \"title\")",
-                Ok {|
+                Ok {
                     Description = []
                     Href = "https://example.com/image.png"
-                    Title = Some "title"
-                |}
+                    Title = "title"
+                }
             )
         testCase "[image alt](https://example.com/image.png \"title\")" <| fun () ->
             Assert.Equal(
                 "",
                 runResult parser "[image alt](https://example.com/image.png \"title\")",
-                Ok {|
+                Ok {
                     Description = [
                         LineElement.Text "image alt"
                     ]
                     Href = "https://example.com/image.png"
-                    Title = Some "title"
-                |}
+                    Title = "title"
+                }
             )
     ]
 
