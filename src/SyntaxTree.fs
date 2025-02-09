@@ -64,6 +64,58 @@ module CommonParser =
     let popNestingLevel: Parser<_> =
         updateNestingLevel (State.popNestingLevel >> snd)
 
+/// ```markdown
+/// [description](https://example.com "Title of link")
+/// ```
+type Link =
+    {
+        Href: string
+        Title: string
+        Description: Line
+    }
+
+[<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
+[<RequireQualifiedAccess>]
+module Link =
+    module Show =
+        open FsharpMyExtension.ShowList
+
+        let show (showLine: Line -> ShowS) (link: Link) =
+            let title =
+                if link.Title = "" then
+                    empty
+                else
+                    showChar ' ' << showAutoParen "\"" (showString link.Title)
+
+            let url =
+                showAutoParen "(" (showString link.Href << title)
+
+            showAutoParen "[" (showLine link.Description) << url
+
+    module Parser =
+        open FParsec
+
+        open CommonParser
+
+        let parser pline: Parser<Link> =
+            pipe2
+                (between (pchar '[') (pchar ']') (pline <|>% []))
+                (between (pchar '(') (pchar ')') (
+                    let ptitle =
+                        between (pchar '"') (pchar '"') (manySatisfy ((<>) '"'))
+                    manySatisfy (fun c ->
+                        not (c = ')' || System.Char.IsWhiteSpace c)
+                    )
+                    .>> spaces .>>. opt ptitle
+                ))
+                (fun description (href, title) ->
+                    {
+                        Description = description
+                        Href = href
+                        Title = Option.defaultValue "" title
+                    }
+                )
+
 [<RequireQualifiedAccess>]
 type LineElement =
     | Bold of LineElement
@@ -75,7 +127,7 @@ type LineElement =
     /// ```markdown
     /// [description](https://example.com "Title of image")
     /// ```
-    | Link of href: string * title: string * description: LineElement list
+    | Link of Link
     /// ```markdown
     /// ![Alt-text](https://example.com/image.png "Title of image")
     /// `````
@@ -113,17 +165,8 @@ module LineElement =
             | LineElement.Underline(lineElement) ->
                 f (showString "__") lineElement
 
-            | LineElement.Link(href, title, description) ->
-                let title =
-                    if title = "" then
-                        empty
-                    else
-                        showChar ' ' << showAutoParen "\"" (showString title)
-
-                let url =
-                    showAutoParen "(" (showString href << title)
-
-                showAutoParen "[" (showLine description) << url
+            | LineElement.Link link ->
+                Link.Show.show showLine link
 
             | LineElement.Image(src, title, alt) ->
                 let title =
@@ -143,25 +186,6 @@ module LineElement =
         open FParsec
 
         open CommonParser
-
-        let plink (pline: Parser<Line>): Parser<_> =
-            pipe2
-                (between (pchar '[') (pchar ']') (pline <|>% []))
-                (between (pchar '(') (pchar ')') (
-                    let ptitle =
-                        between (pchar '"') (pchar '"') (manySatisfy ((<>) '"'))
-                    manySatisfy (fun c ->
-                        not (c = ')' || System.Char.IsWhiteSpace c)
-                    )
-                    .>> spaces .>>. opt ptitle
-                ))
-                (fun description (href, title) ->
-                    {|
-                        Description = description
-                        Href = href
-                        Title = title
-                    |}
-                )
 
         let pimage: Parser<_> =
             pchar '!'
@@ -193,7 +217,7 @@ module LineElement =
 
         let parse pline: Parser<_> =
             choice [
-                plink pline |>> fun x -> LineElement.Link(x.Href, x.Title |> Option.defaultValue "", x.Description)
+                Link.Parser.parser pline |>> LineElement.Link
                 pimage |>> fun x -> LineElement.Image(x.Src, x.Title |> Option.defaultValue "", x.Alt)
                 ptext |>> LineElement.Text
             ]
