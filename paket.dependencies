@@ -14,7 +14,7 @@ group Tests
     storage: none
     source https://api.nuget.org/v3/index.json
     source https://gitlab.com/api/v4/projects/28574921/packages/nuget/index.json
-    framework: net461, netcoreapp3.1
+    framework: netcoreapp3.1
 
     nuget Fuchu >= 1.1 lowest_matching: true
 
