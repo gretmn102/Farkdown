@@ -1,3 +1,7 @@
+## 0.4.0
+* feat!: set the experimental types as the main
+* feat: write simple parser
+
 ## 0.3.0
 * feat!: remove `HtmlToMarkdown`
 * feat!: add to `Experimental.SyntaxTree.Statement` `RequireQualifiedAccess`
