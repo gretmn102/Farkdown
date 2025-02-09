@@ -198,9 +198,9 @@ let ``Line.Parser.parse`` =
 
 
 [<Tests>]
-let ``Statement.Parser.pheader`` =
-    let parser = Statement.Parser.pheader (FParsec.Primitives.preturn [])
-    testList "Statement.Parser.pheader" [
+let ``Header.Parser.parse`` =
+    let parser = Header.Parser.parse (FParsec.Primitives.preturn [])
+    testList "Header.Parser.parse" [
         testCase "empty" <| fun () ->
             Assert.Equal(
                 "",
@@ -228,37 +228,31 @@ let ``Statement.Parser.pheader`` =
             Assert.Equal(
                 "",
                 runResult parser "#Header",
-                Ok {|
+                Ok {
                     Level = 1
-                    Line = [
-                        LineElement.Text "Header"
-                    ]
+                    Title = [ LineElement.Text "Header" ]
                     Body = []
-                |}
+                }
             )
         testCase "# Header" <| fun () ->
             Assert.Equal(
                 "",
                 runResult parser "# Header",
-                Ok {|
+                Ok {
                     Level = 1
-                    Line = [
-                        LineElement.Text "Header"
-                    ]
+                    Title = [ LineElement.Text "Header" ]
                     Body = []
-                |}
+                }
             )
         testCase "## Header" <| fun () ->
             Assert.Equal(
                 "",
                 runResult parser "## Header",
-                Ok {|
+                Ok {
                     Level = 2
-                    Line = [
-                        LineElement.Text "Header"
-                    ]
+                    Title = [ LineElement.Text "Header" ]
                     Body = []
-                |}
+                }
             )
     ]
 
@@ -407,7 +401,7 @@ let ``Statement.Parser.parse`` =
             Assert.Equal(
                 "",
                 Ok (
-                    Statement.Header(1, [ LineElement.Text "header" ], [])
+                    h1 [ LineElement.Text "header" ] []
                 ),
                 runResult parser "# header"
             )
@@ -415,7 +409,7 @@ let ``Statement.Parser.parse`` =
             Assert.Equal(
                 "",
                 Ok (
-                    Statement.Header(1, [ LineElement.Text "header" ], [])
+                    h1 [ LineElement.Text "header" ] []
                 ),
                 runResult
                     (
@@ -429,7 +423,7 @@ let ``Statement.Parser.parse`` =
             Assert.Equal(
                 "",
                 Ok (
-                    Statement.Header(1, [ LineElement.Text "header" ], [])
+                    h1 [ LineElement.Text "header" ] []
                 ),
                 runResult
                     (
