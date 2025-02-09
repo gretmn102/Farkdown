@@ -144,6 +144,25 @@ module LineElement =
 
         open CommonParser
 
+        let plink (pline: Parser<Line>): Parser<_> =
+            pipe2
+                (between (pchar '[') (pchar ']') (pline <|>% []))
+                (between (pchar '(') (pchar ')') (
+                    let ptitle =
+                        between (pchar '"') (pchar '"') (manySatisfy ((<>) '"'))
+                    manySatisfy (fun c ->
+                        not (c = ')' || System.Char.IsWhiteSpace c)
+                    )
+                    .>> spaces .>>. opt ptitle
+                ))
+                (fun description (href, title) ->
+                    {|
+                        Description = description
+                        Href = href
+                        Title = title
+                    |}
+                )
+
         let pimage: Parser<_> =
             pchar '!'
             >>. pipe2
@@ -168,12 +187,13 @@ module LineElement =
 
         let ptext: Parser<_> =
             many1Strings (
-                many1Satisfy (fun c -> not (c = '\n' || c = '!'))
+                many1Satisfy (isNoneOf "\n![]")
                 <|> (pchar '!' >>? notFollowedByString "[" >>% "!")
             ) <?> "text"
 
-        let parse: Parser<_> =
+        let parse pline: Parser<_> =
             choice [
+                plink pline |>> fun x -> LineElement.Link(x.Href, x.Title |> Option.defaultValue "", x.Description)
                 pimage |>> fun x -> LineElement.Image(x.Src, x.Title |> Option.defaultValue "", x.Alt)
                 ptext |>> LineElement.Text
             ]
@@ -197,11 +217,13 @@ module Line =
         open CommonParser
 
         let parse: Parser<Line> =
-            notFollowedBy (
-                (pchar '*' .>> spaces1)
-                <|> pchar '#'
-            ) <?> "not * <spaces> or # in line"
-            >>. many1 LineElement.Parser.parse
+            let pline, plineRef = createParserForwardedToRef()
+            plineRef.Value <- notFollowedBy (
+                    (pchar '*' .>> spaces1)
+                    <|> pchar '#'
+                ) <?> "not * <spaces> or # in line"
+                >>. many1 (LineElement.Parser.parse pline)
+            pline
 
 [<RequireQualifiedAccess>]
 type ListItem = Line * Statement list
