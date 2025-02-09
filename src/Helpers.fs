@@ -7,7 +7,7 @@ let text s = LineElement.Text s
 let img src title alt =
     LineElement.Image(src, title, alt)
 let url href title description =
-    LineElement.Url(href, title, description)
+    LineElement.Link(href, title, description)
 
 let h level title body =
     Statement.Header {
