@@ -363,6 +363,10 @@ type Document = Statement list
 [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
 [<RequireQualifiedAccess>]
 module Document =
+    open FsharpMyExtension.FParsecExt
+    open FParsec
+    open FSharp.Core // for `Result`
+
     module Show =
         open FsharpMyExtension.ShowList
 
@@ -395,3 +399,14 @@ module Document =
                 many (Statement.Parser.parse pstatement)
 
             pstatement
+
+    let parse input =
+        runParserOnString
+            Parser.parse
+            CommonParser.State.empty
+            ""
+            input
+        |> ParserResult.toResult
+        |> function
+            | Ok(x, _, _) -> Ok x
+            | Error(msgError, _, _) -> Error msgError
